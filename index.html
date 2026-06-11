@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mutne · rozkład busów</title>
+<style>
+  :root {
+    --bg: #14161a;
+    --card: #1c1f26;
+    --border: #2a2e37;
+    --text: #e8e4da;
+    --dim: #9a958a;
+    --amber: #ffb454;
+    --c231: #89b4fa;
+    --c232: #a6e3a1;
+    --c233: #f38ba8;
+    --ckam: #9399b2;
+    --mono: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, "Cascadia Mono", monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.5 system-ui, sans-serif;
+    padding: 1rem;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+
+  /* departure-board header */
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .5rem 1rem;
+    border-bottom: 2px solid var(--amber);
+    padding-bottom: .75rem;
+    margin-bottom: 1.25rem;
+  }
+  header h1 {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 1.4rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+  header h1 span { color: var(--amber); }
+  #clock {
+    font-family: var(--mono);
+    font-size: 1.4rem;
+    color: var(--amber);
+    text-shadow: 0 0 12px rgba(255,180,84,.35);
+  }
+  #daytype { color: var(--dim); font-size: .85rem; }
+
+  .line {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 1.25rem;
+    overflow: hidden;
+  }
+  .line-head {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .7rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .badge {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 1.05rem;
+    padding: .1rem .55rem;
+    border-radius: 6px;
+    color: #14161a;
+  }
+  .line-head .op { margin-left: auto; color: var(--dim); font-size: .8rem; text-align: right; }
+
+  .dirs { display: grid; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 760px) { .dirs { grid-template-columns: 1fr; } }
+  .dir { padding: .9rem 1rem 1rem; }
+  .dir + .dir { border-left: 1px solid var(--border); }
+  @media (max-width: 760px) { .dir + .dir { border-left: 0; border-top: 1px solid var(--border); } }
+
+  .dir h2 {
+    margin: 0 0 .6rem;
+    font-size: 1rem;
+    display: flex;
+    align-items: baseline;
+    gap: .6rem;
+    flex-wrap: wrap;
+  }
+  .dir h2 .next {
+    font-family: var(--mono);
+    font-size: .8rem;
+    color: var(--amber);
+    font-weight: 400;
+  }
+  .day { margin-bottom: .55rem; }
+  .day .lbl {
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--dim);
+    margin-bottom: .25rem;
+  }
+  .times { display: flex; flex-wrap: wrap; gap: .3rem; }
+  .t {
+    font-family: var(--mono);
+    font-size: .88rem;
+    padding: .15rem .45rem;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    white-space: nowrap;
+  }
+  .t sup { color: var(--dim); font-size: .65em; margin-left: 1px; }
+  .t.past { opacity: .38; }
+  .t.next {
+    border-color: var(--amber);
+    color: var(--amber);
+    background: rgba(255,180,84,.08);
+    box-shadow: 0 0 10px rgba(255,180,84,.25);
+  }
+  .legend {
+    padding: .5rem 1rem .8rem;
+    color: var(--dim);
+    font-size: .78rem;
+    border-top: 1px dashed var(--border);
+  }
+  .note { color: var(--dim); font-size: .8rem; margin: -.5rem 0 1.25rem; }
+  footer { color: var(--dim); font-size: .78rem; margin-top: 1.5rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Mutne <span>· odjazdy</span></h1>
+    <div>
+      <span id="clock">--:--</span>
+      <div id="daytype"></div>
+    </div>
+  </header>
+  <p class="note">Święta jeżdżą wg rozkładu niedzielnego. Brak kursów: 1 stycznia, Niedziela i Poniedziałek Wielkanocny, 25–26 grudnia. Dane z komunikacjapowiatuzywieckiego.pl, daty ważności przy liniach.</p>
+  <div id="lines"></div>
+  <footer>
+    Operatorzy: Cedrom Józef Kamiński, tel. 502 328 100, kammustangbus@gmail.com (231, 233) ·
+    Team Bus Janusz Wróbel, tel. 533 542 260, biuro@team-bus.pl (232) ·
+    Wynajem busów: 502 328 100. Spisane z afiszy na przystanku, mogą zawierać błędy.
+  </footer>
+</div>
+
+<script>
+// times: "HH:MM" or "HH:MM X" where X = course markers
+// Linia Kamińskiego nie figuruje na stronie powiatu, dane statyczne z afisza:
+const KAMINSKI = {
+  badge: "BUS", color: "var(--ckam)", op: "F.U.H Józef Kamiński · Krzyżówki–Korbielów–Żywiec",
+  legend: "P – kurs linią powiatową Żywiec Nowy Szpital / Leśnianka II",
+  dirs: [
+    {
+      name: "→ Żywiec",
+      wd:  ["05:08","06:07 P","07:14","08:22 P","09:27","10:22 P","11:22","12:27 P","13:07","13:32","14:57 P","15:47","16:42 P","17:27","18:37 P","19:32 P","21:22 P"],
+      sat: ["05:08","07:14 P","09:27 P","11:27 P","13:10 P","15:47 P","17:27 P","19:32 P"],
+      sun: ["09:27 P","11:27 P","13:10 P","15:47 P","17:27 P","19:32 P"]
+    },
+    {
+      name: "→ Korbielów / Krzyżówki",
+      wd:  ["06:23","07:16 P","08:23","09:26 P","10:23","11:06 P","11:58","13:11 P","14:03","14:27","15:41 P","16:33","17:41 P","18:18","19:18 P","20:33 P","22:27 P"],
+      sat: ["06:23","08:23 P","10:13 P","11:59 P","14:27 P","16:23 P","18:13 P","20:23 P"],
+      sun: ["10:13 P","11:59 P","14:27 P","16:23 P","18:13 P","20:23 P"]
+    }
+  ]
+};
+
+// AUTO-DATA:START — aktualizowane przez scripts/update_timetables.py
+const DATA = [
+  {
+    "badge": "231",
+    "color": "var(--c231)",
+    "op": "Cedrom J. Kamiński · od 09.02.2026",
+    "legend": "L – &minus; kurs do: Żywiec, Leśnianka II · S – &minus; kurs przez: Żywiec, Pola Lisickich Szpital, z pominięciem: Żywiec, Grunwaldzka ZSTiL",
+    "dirs": [
+      {
+        "name": "→ Żywiec (dworzec autobusowy, 27 min)",
+        "wd": [
+          "05:13",
+          "07:01",
+          "08:38",
+          "10:28",
+          "13:08",
+          "15:18",
+          "17:08",
+          "18:48",
+          "21:08"
+        ],
+        "sat": [
+          "05:13",
+          "07:13",
+          "09:13",
+          "11:13",
+          "13:08"
+        ],
+        "sun": [
+          "07:13",
+          "09:13",
+          "11:13",
+          "13:08"
+        ]
+      },
+      {
+        "name": "→ Pewel Wielka (Łobozówka, 16 min)",
+        "wd": [
+          "06:29",
+          "08:04",
+          "09:54",
+          "12:29",
+          "14:46",
+          "16:24",
+          "18:14",
+          "19:59",
+          "22:34"
+        ],
+        "sat": [
+          "06:29",
+          "08:34",
+          "10:34",
+          "12:34",
+          "14:51"
+        ],
+        "sun": [
+          "08:34",
+          "10:34",
+          "12:34",
+          "14:49"
+        ]
+      }
+    ]
+  },
+  {
+    "badge": "232",
+    "color": "var(--c232)",
+    "op": "Team Bus J. Wróbel · od 16.03.2026",
+    "legend": "L – &minus; kurs do: Żywiec, Leśnianka II · S – &minus; kurs przez: Żywiec, Pola Lisickich Szpital, z pominięciem: Żywiec, Grunwaldzka ZSTiL · N – kursuje tylko w dni nauki szkolnej · B – &minus; kurs do: Koszarawa, Bystra pętla · K – &minus; kurs przez: Koszarawa, Bystra · &minus; Uwaga! W okresie od listopada do marca, w przypadku złych warunków atmosferycznych, możliwe ograniczenie w kursowaniu przez Koszarawę Bystrą.",
+    "dirs": [
+      {
+        "name": "→ Żywiec (dworzec autobusowy, 27 min)",
+        "wd": [
+          "05:06",
+          "06:23",
+          "07:08 N",
+          "07:38",
+          "08:08",
+          "09:33",
+          "10:03",
+          "12:13",
+          "13:01",
+          "15:33",
+          "16:48",
+          "17:58",
+          "19:03",
+          "20:03",
+          "21:13"
+        ],
+        "sat": [
+          "08:03",
+          "10:23",
+          "12:53",
+          "15:33",
+          "17:53"
+        ],
+        "sun": [
+          "08:03",
+          "10:23",
+          "12:53",
+          "15:33",
+          "17:53"
+        ]
+      },
+      {
+        "name": "→ Koszarawa (Jałowiec pętla, 26 min)",
+        "wd": [
+          "06:36",
+          "07:19",
+          "08:39",
+          "09:14",
+          "10:54",
+          "12:04",
+          "13:44",
+          "14:19",
+          "14:39",
+          "15:39 N",
+          "16:49",
+          "17:54",
+          "19:04",
+          "20:14",
+          "22:31"
+        ],
+        "sat": [
+          "09:09",
+          "11:39",
+          "14:24",
+          "16:44",
+          "19:04"
+        ],
+        "sun": [
+          "09:09",
+          "11:39",
+          "14:24",
+          "16:44",
+          "19:04"
+        ]
+      }
+    ]
+  },
+  {
+    "badge": "233",
+    "color": "var(--c233)",
+    "op": "Cedrom J. Kamiński · od 09.02.2026",
+    "legend": "L – &minus; kurs do: Żywiec, Leśnianka II · S – &minus; kurs przez: Żywiec, Pola Lisickich Szpital, z pominięciem: Żywiec, Grunwaldzka ZSTiL · K – &minus; kurs do: Korbielów, Kamienna",
+    "dirs": [
+      {
+        "name": "→ Żywiec (dworzec autobusowy, 27 min)",
+        "wd": [
+          "05:03",
+          "06:08",
+          "07:17",
+          "08:18",
+          "09:19",
+          "10:43",
+          "11:19",
+          "12:28",
+          "13:03",
+          "13:24",
+          "14:48",
+          "15:43",
+          "16:43",
+          "17:43",
+          "18:33",
+          "19:28",
+          "21:18"
+        ],
+        "sat": [
+          "05:03",
+          "07:26",
+          "09:23",
+          "11:28",
+          "13:13",
+          "15:38",
+          "17:28",
+          "19:18"
+        ],
+        "sun": [
+          "09:23",
+          "11:28",
+          "13:13",
+          "15:38",
+          "17:28",
+          "19:18"
+        ]
+      },
+      {
+        "name": "→ Krzyżówki (przez Jeleśnię i Korbielów, 27 min)",
+        "wd": [
+          "06:32",
+          "07:09",
+          "08:19",
+          "09:34",
+          "10:34",
+          "11:44",
+          "12:24",
+          "13:29",
+          "14:20",
+          "14:44",
+          "15:39",
+          "16:44",
+          "17:44",
+          "18:39",
+          "19:44",
+          "20:24",
+          "22:29"
+        ],
+        "sat": [
+          "06:32",
+          "08:19",
+          "10:19",
+          "12:24",
+          "14:44",
+          "16:34",
+          "18:19",
+          "20:14"
+        ],
+        "sun": [
+          "10:19",
+          "12:24",
+          "14:44",
+          "16:34",
+          "18:19",
+          "20:14"
+        ]
+      }
+    ]
+  }
+];
+// AUTO-DATA:END
+
+const ALL = [...DATA, KAMINSKI];
+
+const DAY_LABELS = { wd: "Pon–Pt", sat: "Soboty", sun: "Niedziele i święta" };
+
+function todayKey() {
+  const d = new Date().getDay();
+  return d === 0 ? "sun" : d === 6 ? "sat" : "wd";
+}
+
+function minutes(t) {
+  const [h, m] = t.split(" ")[0].split(":").map(Number);
+  return h * 60 + m;
+}
+
+function chip(t) {
+  const [time, marks] = t.split(" ");
+  const sup = marks ? `<sup>${marks}</sup>` : "";
+  return `<span class="t" data-min="${minutes(t)}">${time}${sup}</span>`;
+}
+
+function render() {
+  document.getElementById("lines").innerHTML = ALL.map(line => `
+    <section class="line">
+      <div class="line-head">
+        <span class="badge" style="background:${line.color}">${line.badge}</span>
+        <span class="op">${line.op}</span>
+      </div>
+      <div class="dirs">
+        ${line.dirs.map(dir => `
+          <div class="dir">
+            <h2>${dir.name} <span class="next"></span></h2>
+            ${["wd","sat","sun"].map(k => `
+              <div class="day" data-day="${k}">
+                <div class="lbl">${DAY_LABELS[k]}</div>
+                <div class="times">${dir[k].map(chip).join("")}</div>
+              </div>`).join("")}
+          </div>`).join("")}
+      </div>
+      <div class="legend">${line.legend}</div>
+    </section>`).join("");
+}
+
+function tick() {
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const day = todayKey();
+
+  document.getElementById("clock").textContent =
+    now.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
+  document.getElementById("daytype").textContent =
+    now.toLocaleDateString("pl-PL", { weekday: "long", day: "numeric", month: "long" }) +
+    " · " + DAY_LABELS[day];
+
+  document.querySelectorAll(".dir").forEach(dir => {
+    let next = null;
+    dir.querySelectorAll(".t").forEach(t => t.classList.remove("next", "past"));
+    dir.querySelectorAll(`.day[data-day="${day}"] .t`).forEach(t => {
+      const m = Number(t.dataset.min);
+      if (m < nowMin) t.classList.add("past");
+      else if (!next || m < Number(next.dataset.min)) next = t;
+    });
+    const label = dir.querySelector(".next");
+    if (next) {
+      next.classList.add("next");
+      const wait = Number(next.dataset.min) - nowMin;
+      label.textContent = wait === 0 ? "teraz" : `za ${Math.floor(wait/60) ? Math.floor(wait/60) + " h " : ""}${wait % 60} min`;
+    } else {
+      label.textContent = "dziś już nic";
+    }
+  });
+}
+
+render();
+tick();
+setInterval(tick, 30000);
+</script>
+</body>
+</html>
