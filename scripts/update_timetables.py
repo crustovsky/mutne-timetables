@@ -11,6 +11,7 @@ import json
 import re
 import sys
 import urllib.request
+from html import unescape
 from pathlib import Path
 
 BASE = "https://www.komunikacjapowiatuzywieckiego.pl/"
@@ -22,6 +23,7 @@ LINES = {
     "231": {"color": "var(--c231)", "op": "Cedrom J. Kamiński"},
     "232": {"color": "var(--c232)", "op": "Team Bus J. Wróbel"},
     "233": {"color": "var(--c233)", "op": "Cedrom J. Kamiński"},
+    "234": {"color": "var(--c234)", "op": "Chrustek Travel"},
 }
 
 # nicer direction labels; anything unknown falls back to "→ <kierunek>"
@@ -30,6 +32,7 @@ LABELS = {
     "Pewel Wielka, Łobozówka": "→ Pewel Wielka (Łobozówka, 16 min)",
     "Koszarawa, Jałowiec Pętla": "→ Koszarawa (Jałowiec pętla, 26 min)",
     "Krzyżówki, Posesja 303": "→ Krzyżówki (przez Jeleśnię i Korbielów, 27 min)",
+    "Sopotnia Wielka, Kolonia": "→ Sopotnia Wielka (Kolonia, przez Jeleśnię)",
 }
 
 
@@ -41,8 +44,12 @@ def fetch(url):
 
 def strip_tags(html):
     text = re.sub(r"<script.*?</script>", " ", html, flags=re.S)
+    text = re.sub(r"</?font[^>]*>", "", text)
+    # course markers sit in <span class="codes"> right after the time;
+    # unwrap so they stay glued to it (the legend uses <div class="codes">)
+    text = re.sub(r'<span class="codes">([A-Z#]*)</span>', r"\1", text)
     text = re.sub(r"<[^>]+>", "\n", text)
-    return re.sub(r"[ \t]+", " ", text)
+    return unescape(re.sub(r"[ \t]+", " ", text))
 
 
 def mutne_urls(line):
@@ -155,7 +162,20 @@ def build_line(line, cfg):
     return entry
 
 
+def check_for_new_lines():
+    """przystanek-98.html is the authoritative list of lines serving Mutne.
+    Fail loudly if it lists a line we don't have configured."""
+    html = fetch(f"{BASE}przystanek-98.html")
+    serving = set(re.findall(r"start-(\d+)_", html))
+    missing = serving - set(LINES)
+    if missing:
+        raise RuntimeError(
+            f"nowe linie na przystanku Mutne: {sorted(missing)} — dodaj do LINES"
+        )
+
+
 def main():
+    check_for_new_lines()
     data = [build_line(line, cfg) for line, cfg in sorted(LINES.items())]
     block = "const DATA = " + json.dumps(data, ensure_ascii=False, indent=2) + ";"
 

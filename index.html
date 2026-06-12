@@ -15,7 +15,7 @@
     --c231: #89b4fa;
     --c232: #a6e3a1;
     --c233: #f38ba8;
-    --ckam: #9399b2;
+    --c234: #f9e2af;
     --mono: "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, "Cascadia Mono", monospace;
   }
   * { box-sizing: border-box; }
@@ -132,6 +132,7 @@
   }
   .note { color: var(--dim); font-size: .8rem; margin: -.5rem 0 1.25rem; }
   footer { color: var(--dim); font-size: .78rem; margin-top: 1.5rem; }
+  footer a { color: var(--dim); }
 </style>
 </head>
 <body>
@@ -148,32 +149,14 @@
   <footer>
     Operatorzy: Cedrom Józef Kamiński, tel. 502 328 100, kammustangbus@gmail.com (231, 233) ·
     Team Bus Janusz Wróbel, tel. 533 542 260, biuro@team-bus.pl (232) ·
-    Wynajem busów: 502 328 100. Spisane z afiszy na przystanku, mogą zawierać błędy. ·
-    Kontakt: <a href="mailto:admin@mutne.pl" style="color:inherit">admin@mutne.pl</a>
+    Chrustek Travel (234) ·
+    Wynajem busów: 502 328 100.<br>
+    Źródło danych: <a href="https://komunikacjapowiatuzywieckiego.pl/przystanek-98.html">komunikacjapowiatuzywieckiego.pl</a>. Rozkłady mogą zawierać błędy.
   </footer>
 </div>
 
 <script>
 // times: "HH:MM" or "HH:MM X" where X = course markers
-// Linia Kamińskiego nie figuruje na stronie powiatu, dane statyczne z afisza:
-const KAMINSKI = {
-  badge: "BUS", color: "var(--ckam)", op: "F.U.H Józef Kamiński · Krzyżówki–Korbielów–Żywiec",
-  legend: "P – kurs linią powiatową Żywiec Nowy Szpital / Leśnianka II",
-  dirs: [
-    {
-      name: "→ Żywiec",
-      wd:  ["05:08","06:07 P","07:14","08:22 P","09:27","10:22 P","11:22","12:27 P","13:07","13:32","14:57 P","15:47","16:42 P","17:27","18:37 P","19:32 P","21:22 P"],
-      sat: ["05:08","07:14 P","09:27 P","11:27 P","13:10 P","15:47 P","17:27 P","19:32 P"],
-      sun: ["09:27 P","11:27 P","13:10 P","15:47 P","17:27 P","19:32 P"]
-    },
-    {
-      name: "→ Korbielów / Krzyżówki",
-      wd:  ["06:23","07:16 P","08:23","09:26 P","10:23","11:06 P","11:58","13:11 P","14:03","14:27","15:41 P","16:33","17:41 P","18:18","19:18 P","20:33 P","22:27 P"],
-      sat: ["06:23","08:23 P","10:13 P","11:59 P","14:27 P","16:23 P","18:13 P","20:23 P"],
-      sun: ["10:13 P","11:59 P","14:27 P","16:23 P","18:13 P","20:23 P"]
-    }
-  ]
-};
 
 // AUTO-DATA:START — aktualizowane przez scripts/update_timetables.py
 const DATA = [
@@ -181,33 +164,33 @@ const DATA = [
     "badge": "231",
     "color": "var(--c231)",
     "op": "Cedrom J. Kamiński · od 09.02.2026",
-    "legend": "L – &minus; kurs do: Żywiec, Leśnianka II · S – &minus; kurs przez: Żywiec, Pola Lisickich Szpital, z pominięciem: Żywiec, Grunwaldzka ZSTiL",
+    "legend": "L – kurs do: Żywiec, Leśnianka II · S – kurs przez: Żywiec, Pola Lisickich Szpital, z pominięciem: Żywiec, Grunwaldzka ZSTiL",
     "dirs": [
       {
         "name": "→ Żywiec (dworzec autobusowy, 27 min)",
         "wd": [
-          "05:13",
+          "05:13 L",
           "07:01",
           "08:38",
-          "10:28",
-          "13:08",
+          "10:28 S",
+          "13:08 L",
           "15:18",
-          "17:08",
-          "18:48",
-          "21:08"
+          "17:08 S",
+          "18:48 S",
+          "21:08 L"
         ],
         "sat": [
-          "05:13",
+          "05:13 L",
           "07:13",
-          "09:13",
-          "11:13",
-          "13:08"
+          "09:13 S",
+          "11:13 S",
+          "13:08 LS"
         ],
         "sun": [
           "07:13",
-          "09:13",
-          "11:13",
-          "13:08"
+          "09:13 S",
+          "11:13 S",
+          "13:08 S"
         ]
       },
       {
@@ -243,74 +226,74 @@ const DATA = [
     "badge": "232",
     "color": "var(--c232)",
     "op": "Team Bus J. Wróbel · od 16.03.2026",
-    "legend": "L – &minus; kurs do: Żywiec, Leśnianka II · S – &minus; kurs przez: Żywiec, Pola Lisickich Szpital, z pominięciem: Żywiec, Grunwaldzka ZSTiL · N – kursuje tylko w dni nauki szkolnej · B – &minus; kurs do: Koszarawa, Bystra pętla · K – &minus; kurs przez: Koszarawa, Bystra · &minus; Uwaga! W okresie od listopada do marca, w przypadku złych warunków atmosferycznych, możliwe ograniczenie w kursowaniu przez Koszarawę Bystrą.",
+    "legend": "L – kurs do: Żywiec, Leśnianka II · S – kurs przez: Żywiec, Pola Lisickich Szpital, z pominięciem: Żywiec, Grunwaldzka ZSTiL · N – kursuje tylko w dni nauki szkolnej · B – kurs do: Koszarawa, Bystra pętla · K – kurs przez: Koszarawa, Bystra · Uwaga! W okresie od listopada do marca, w przypadku złych warunków atmosferycznych, możliwe ograniczenie w kursowaniu przez Koszarawę Bystrą.",
     "dirs": [
       {
         "name": "→ Żywiec (dworzec autobusowy, 27 min)",
         "wd": [
-          "05:06",
+          "05:06 L",
           "06:23",
           "07:08 N",
-          "07:38",
+          "07:38 S",
           "08:08",
-          "09:33",
+          "09:33 S",
           "10:03",
-          "12:13",
-          "13:01",
+          "12:13 S",
+          "13:01 L",
           "15:33",
-          "16:48",
+          "16:48 S",
           "17:58",
-          "19:03",
+          "19:03 S",
           "20:03",
-          "21:13"
+          "21:13 L"
         ],
         "sat": [
-          "08:03",
-          "10:23",
-          "12:53",
-          "15:33",
-          "17:53"
+          "08:03 S",
+          "10:23 S",
+          "12:53 S",
+          "15:33 S",
+          "17:53 S"
         ],
         "sun": [
-          "08:03",
-          "10:23",
-          "12:53",
-          "15:33",
-          "17:53"
+          "08:03 S",
+          "10:23 S",
+          "12:53 S",
+          "15:33 S",
+          "17:53 S"
         ]
       },
       {
         "name": "→ Koszarawa (Jałowiec pętla, 26 min)",
         "wd": [
           "06:36",
-          "07:19",
+          "07:19 B",
           "08:39",
-          "09:14",
-          "10:54",
+          "09:14 B",
+          "10:54 K",
           "12:04",
-          "13:44",
-          "14:19",
+          "13:44 K",
+          "14:19 K",
           "14:39",
           "15:39 N",
-          "16:49",
+          "16:49 B",
           "17:54",
-          "19:04",
+          "19:04 B",
           "20:14",
           "22:31"
         ],
         "sat": [
-          "09:09",
-          "11:39",
-          "14:24",
-          "16:44",
-          "19:04"
+          "09:09 K",
+          "11:39 K",
+          "14:24 K",
+          "16:44 K",
+          "19:04 K"
         ],
         "sun": [
-          "09:09",
-          "11:39",
-          "14:24",
-          "16:44",
-          "19:04"
+          "09:09 K",
+          "11:39 K",
+          "14:24 K",
+          "16:44 K",
+          "19:04 K"
         ]
       }
     ]
@@ -319,43 +302,43 @@ const DATA = [
     "badge": "233",
     "color": "var(--c233)",
     "op": "Cedrom J. Kamiński · od 09.02.2026",
-    "legend": "L – &minus; kurs do: Żywiec, Leśnianka II · S – &minus; kurs przez: Żywiec, Pola Lisickich Szpital, z pominięciem: Żywiec, Grunwaldzka ZSTiL · K – &minus; kurs do: Korbielów, Kamienna",
+    "legend": "L – kurs do: Żywiec, Leśnianka II · S – kurs przez: Żywiec, Pola Lisickich Szpital, z pominięciem: Żywiec, Grunwaldzka ZSTiL · K – kurs do: Korbielów, Kamienna",
     "dirs": [
       {
         "name": "→ Żywiec (dworzec autobusowy, 27 min)",
         "wd": [
-          "05:03",
-          "06:08",
+          "05:03 L",
+          "06:08 S",
           "07:17",
-          "08:18",
+          "08:18 S",
           "09:19",
-          "10:43",
+          "10:43 S",
           "11:19",
-          "12:28",
-          "13:03",
-          "13:24",
+          "12:28 S",
+          "13:03 L",
+          "13:24 S",
           "14:48",
           "15:43",
-          "16:43",
+          "16:43 S",
           "17:43",
-          "18:33",
+          "18:33 S",
           "19:28",
-          "21:18"
+          "21:18 L"
         ],
         "sat": [
-          "05:03",
+          "05:03 L",
           "07:26",
-          "09:23",
+          "09:23 S",
           "11:28",
-          "13:13",
+          "13:13 LS",
           "15:38",
           "17:28",
           "19:18"
         ],
         "sun": [
-          "09:23",
+          "09:23 S",
           "11:28",
-          "13:13",
+          "13:13 S",
           "15:38",
           "17:28",
           "19:18"
@@ -366,18 +349,18 @@ const DATA = [
         "wd": [
           "06:32",
           "07:09",
-          "08:19",
+          "08:19 K",
           "09:34",
-          "10:34",
-          "11:44",
-          "12:24",
+          "10:34 K",
+          "11:44 K",
+          "12:24 K",
           "13:29",
           "14:20",
           "14:44",
           "15:39",
-          "16:44",
-          "17:44",
-          "18:39",
+          "16:44 K",
+          "17:44 K",
+          "18:39 K",
           "19:44",
           "20:24",
           "22:29"
@@ -402,11 +385,79 @@ const DATA = [
         ]
       }
     ]
+  },
+  {
+    "badge": "234",
+    "color": "var(--c234)",
+    "op": "Chrustek Travel · od 23.03.2026",
+    "legend": "L – kurs do: Żywiec, Leśnianka II · S – kurs przez: Żywiec, Pola Lisickich Szpital, z pominięciem: Żywiec, Grunwaldzka ZSTiL · N – kursuje tylko w dni nauki szkolnej",
+    "dirs": [
+      {
+        "name": "→ Żywiec (dworzec autobusowy, 27 min)",
+        "wd": [
+          "05:10 L",
+          "06:50",
+          "07:25 N",
+          "08:36 S",
+          "10:55 S",
+          "13:10 LS",
+          "15:10",
+          "17:35",
+          "21:10 L"
+        ],
+        "sat": [
+          "05:10",
+          "06:50",
+          "08:40 S",
+          "10:55 S",
+          "13:10",
+          "15:10",
+          "17:35"
+        ],
+        "sun": [
+          "06:50",
+          "08:40 S",
+          "10:55 S",
+          "13:10",
+          "15:10",
+          "17:35"
+        ]
+      },
+      {
+        "name": "→ Sopotnia Wielka (Kolonia, przez Jeleśnię)",
+        "wd": [
+          "06:24",
+          "07:46",
+          "08:24",
+          "09:54",
+          "11:59",
+          "14:34",
+          "16:09",
+          "18:34",
+          "22:24"
+        ],
+        "sat": [
+          "06:24",
+          "07:41",
+          "09:54",
+          "11:59",
+          "14:39",
+          "16:04",
+          "18:34"
+        ],
+        "sun": [
+          "07:41",
+          "09:54",
+          "11:59",
+          "14:39",
+          "16:04",
+          "18:34"
+        ]
+      }
+    ]
   }
 ];
 // AUTO-DATA:END
-
-const ALL = [...DATA, KAMINSKI];
 
 const DAY_LABELS = { wd: "Pon–Pt", sat: "Soboty", sun: "Niedziele i święta" };
 
@@ -427,7 +478,7 @@ function chip(t) {
 }
 
 function render() {
-  document.getElementById("lines").innerHTML = ALL.map(line => `
+  document.getElementById("lines").innerHTML = DATA.map(line => `
     <section class="line">
       <div class="line-head">
         <span class="badge" style="background:${line.color}">${line.badge}</span>
