@@ -10,7 +10,7 @@ hosted at https://rozklad.mutne.pl via Cloudflare Pages, auto-deployed from this
   departure highlighted with countdown, past departures dimmed.
 - `scripts/update_timetables.py` — stdlib-only scraper. Rewrites the section of
   `index.html` between `// AUTO-DATA:START` and `// AUTO-DATA:END` markers.
-- `.github/workflows/update-timetables.yml` — runs the scraper Mondays 04:00 UTC
+- `.github/workflows/update-timetables.yml` — runs the scraper daily 02:00 UTC
   (+ manual dispatch), commits only on change. Git log = changelog of county
   timetable updates.
 
@@ -57,6 +57,10 @@ operator as Cedrom, same phone) and was deliberately dropped.
 - Scraper fails loudly (empty day section, missing Mutne links, unknown line)
   rather than writing garbage — a red workflow means the page keeps serving the
   last good data.
+- The county publishes new schedules ahead of their "ważny od" date (dropping
+  the old pages at the same time). `defer_future_schedules` keeps the last
+  committed entry for a line until its new valid-from date arrives, so the page
+  never shows a not-yet-effective schedule.
 
 ## Conventions for changes
 

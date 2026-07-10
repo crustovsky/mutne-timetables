@@ -2,7 +2,7 @@ name: Aktualizacja rozkładów
 
 on:
   schedule:
-    - cron: "0 4 * * 1"   # poniedziałek 04:00 UTC
+    - cron: "0 2 * * *"   # codziennie 02:00 UTC — przed pierwszymi kursami, żeby rozkład ważny od danego dnia pojawił się rano tego dnia
   workflow_dispatch:
 
 permissions:

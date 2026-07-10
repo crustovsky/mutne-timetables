@@ -11,8 +11,10 @@ import json
 import re
 import sys
 import urllib.request
+from datetime import datetime
 from html import unescape
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 BASE = "https://www.komunikacjapowiatuzywieckiego.pl/"
 HTML_FILE = Path(__file__).resolve().parent.parent / "index.html"
@@ -152,6 +154,7 @@ def build_line(line, cfg):
     entry = {
         "badge": line,
         "color": cfg["color"],
+        "valid": dirs[0]["valid"],
         "op": f"{cfg['op']} · od {dirs[0]['valid']}",
         "legend": " · ".join(legend),
         "dirs": [{k: d[k] for k in ("name", "wd", "sat", "sun")} for d in dirs],
@@ -174,14 +177,37 @@ def check_for_new_lines():
         )
 
 
+def defer_future_schedules(data, old_block):
+    """The county site publishes new schedules days before their 'ważny od'
+    date and drops the old pages at the same time. Until that date the last
+    committed entry in index.html *is* the schedule still in effect, so keep
+    serving it per line and pick up the new one on its first valid morning."""
+    today = datetime.now(ZoneInfo("Europe/Warsaw")).date()
+    try:
+        old_entries = json.loads(old_block[old_block.index("[") : old_block.rindex("]") + 1])
+        old = {e["badge"]: e for e in old_entries}
+    except ValueError:
+        old = {}
+    out = []
+    for entry in data:
+        valid = datetime.strptime(entry["valid"], "%d.%m.%Y").date()
+        if valid > today and entry["badge"] in old:
+            print(f"{entry['badge']}: nowy rozkład od {entry['valid']} — do tego dnia zostaje obecny")
+            entry = old[entry["badge"]]
+        out.append(entry)
+    return out
+
+
 def main():
     check_for_new_lines()
     data = [build_line(line, cfg) for line, cfg in sorted(LINES.items())]
-    block = "const DATA = " + json.dumps(data, ensure_ascii=False, indent=2) + ";"
 
     src = HTML_FILE.read_text(encoding="utf-8")
     a = src.index("\n", src.index(START_MARK)) + 1
     b = src.rindex("\n", 0, src.index(END_MARK)) + 1
+
+    data = defer_future_schedules(data, src[a:b])
+    block = "const DATA = " + json.dumps(data, ensure_ascii=False, indent=2) + ";"
     out = src[:a] + block + "\n" + src[b:]
 
     if out == src:
