@@ -48,3 +48,7 @@ Rozkład na stronie odzwierciedla dane powiatu — jeśli bus przyjechał o inne
 godzinie, najpierw sprawdź [stronę źródłową](https://komunikacjapowiatuzywieckiego.pl/przystanek-98.html).
 Błędy samej strony można zgłaszać przez
 [Issues](../../issues) albo na admin@mutne.pl.
+
+## Licencja
+
+[MIT](LICENSE)

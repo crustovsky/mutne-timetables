@@ -31,4 +31,8 @@
         text-anchor="middle" fill="#555">
     aby otworzyć aktualne godziny kursów.
   </text>
+  <text x="180" y="362" font-family="ui-monospace, monospace" font-size="9"
+        text-anchor="middle" fill="#999">
+    kod źródłowy: github.com/crustovsky/mutne-timetables
+  </text>
 </svg>
