@@ -152,6 +152,7 @@
     Chrustek Travel (234) ·
     Wynajem busów: 502 328 100.<br>
     Źródło danych: <a href="https://komunikacjapowiatuzywieckiego.pl/przystanek-98.html">komunikacjapowiatuzywieckiego.pl</a>. Rozkłady mogą zawierać błędy. ·
+    Aktualizacja danych: <span id="updated"></span> ·
     Kontakt: <a href="mailto:admin@mutne.pl">admin@mutne.pl</a>
   </footer>
 </div>
@@ -471,6 +472,7 @@ const DATA = [
     ]
   }
 ];
+const UPDATED = "06.07.2026, 10:14";
 // AUTO-DATA:END
 
 const DAY_LABELS = { wd: "Pon–Pt", sat: "Soboty", sun: "Niedziele i święta" };
@@ -543,6 +545,7 @@ function tick() {
   });
 }
 
+document.getElementById("updated").textContent = UPDATED;
 render();
 tick();
 setInterval(tick, 30000);

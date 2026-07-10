@@ -207,10 +207,17 @@ def main():
     b = src.rindex("\n", 0, src.index(END_MARK)) + 1
 
     data = defer_future_schedules(data, src[a:b])
-    block = "const DATA = " + json.dumps(data, ensure_ascii=False, indent=2) + ";"
+    now = datetime.now(ZoneInfo("Europe/Warsaw")).strftime("%d.%m.%Y, %H:%M")
+    block = (
+        "const DATA = " + json.dumps(data, ensure_ascii=False, indent=2) + ";\n"
+        f'const UPDATED = "{now}";'
+    )
     out = src[:a] + block + "\n" + src[b:]
 
-    if out == src:
+    # UPDATED = kiedy dane ostatnio się zmieniły, więc sam znacznik czasu
+    # nie liczy się jako zmiana (inaczej codzienny commit)
+    stamp = re.compile(r'const UPDATED = "[^"]*";\n')
+    if stamp.sub("", out) == stamp.sub("", src):
         print("Bez zmian.")
         return
     HTML_FILE.write_text(out, encoding="utf-8")
