@@ -42,6 +42,10 @@ Uruchomienie lokalne:
 python3 scripts/update_timetables.py
 ```
 
+Ulotka A4 z kodem QR do powieszenia na przystanku:
+[`rozklad-mutne-qr.pdf`](rozklad-mutne-qr.pdf)
+(generowana z [`rozklad-mutne-qr.svg`](rozklad-mutne-qr.svg) przez `rsvg-convert -f pdf`).
+
 ## Zgłaszanie błędów
 
 Rozkład na stronie odzwierciedla dane powiatu — jeśli bus przyjechał o innej
