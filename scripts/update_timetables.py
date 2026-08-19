@@ -40,8 +40,11 @@ LABELS = {
 
 def fetch(url):
     req = urllib.request.Request(url, headers={"User-Agent": "bus.mutne.pl updater"})
-    with urllib.request.urlopen(req, timeout=30) as r:
-        return r.read().decode("utf-8", "replace")
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            return r.read().decode("utf-8", "replace")
+    except OSError as e:
+        raise RuntimeError(f"nie udało się pobrać {url}: {e}") from None
 
 
 def strip_tags(html):
@@ -54,15 +57,49 @@ def strip_tags(html):
     return unescape(re.sub(r"[ \t]+", " ", text))
 
 
-def mutne_urls(line):
-    """Both Mutne stop-page URLs (one per direction) from the line page."""
-    html = fetch(f"{BASE}linia-{line}.html")
+def mutne_links(html):
     urls = []
     for href in re.findall(r'href="([^"]*rozklad-[^"]+)"[^>]*>\s*Mutne\s*<', html):
         if href not in urls:
             urls.append(href)
+    return urls
+
+
+def mutne_urls(line):
+    """Both Mutne stop-page URLs (one per direction) from the line page.
+
+    While an old and a pre-published new schedule coexist, the line page shows
+    a version chooser (start-XXX_YYYYMMDD-*.html links) instead of the stop
+    list. Follow the version in effect today, or the earliest upcoming one if
+    none is; defer_future_schedules keeps the committed data until its date."""
+    src = f"{BASE}linia-{line}.html"
+    html = fetch(src)
+    urls = mutne_links(html)
+    if not urls:
+        versions = sorted(
+            set(re.findall(rf'href="(start-{line}_(\d{{8}})[^"]*)"', html)),
+            key=lambda v: v[1],
+        )
+        if not versions:
+            raise RuntimeError(
+                f"linia {line}: na {src} nie ma ani linków Mutne, ani wyboru "
+                f"wersji rozkładu (start-...); strona zmieniła strukturę?"
+            )
+        today = datetime.now(ZoneInfo("Europe/Warsaw")).strftime("%Y%m%d")
+        in_effect = [href for href, d in versions if d <= today]
+        pick = in_effect[-1] if in_effect else versions[0][0]
+        print(
+            f"linia {line}: wersje rozkładu: "
+            f"{', '.join(h for h, _ in versions)}; wybrano {pick}"
+        )
+        src = BASE + pick
+        urls = mutne_links(fetch(src))
     if len(urls) != 2:
-        raise RuntimeError(f"linia {line}: oczekiwano 2 linków Mutne, jest {len(urls)}")
+        found = f" ({', '.join(urls)})" if urls else ""
+        raise RuntimeError(
+            f"linia {line}: oczekiwano 2 linków Mutne na {src}, "
+            f"jest {len(urls)}{found}; zmiana trasy albo struktury strony?"
+        )
     return [u if u.startswith("http") else BASE + u.lstrip("/") for u in urls]
 
 
@@ -81,8 +118,14 @@ def fmt(times):
 
 def parse_stop(url):
     text = strip_tags(fetch(url))
-    direction = [d.strip() for d in re.findall(r"Kierunek:\s*\n+\s*([^\n]+)", text)][-1]
-    valid = re.search(r"ważny od:\s*\n*\s*([0-9]{2}\.[0-9]{2}\.[0-9]{4})", text).group(1)
+    kierunki = re.findall(r"Kierunek:\s*\n+\s*([^\n]+)", text)
+    if not kierunki:
+        raise RuntimeError(f"brak nagłówka 'Kierunek:' na {url}; zmiana struktury strony?")
+    direction = kierunki[-1].strip()
+    m = re.search(r"ważny od:\s*\n*\s*([0-9]{2}\.[0-9]{2}\.[0-9]{4})", text)
+    if not m:
+        raise RuntimeError(f"brak daty 'ważny od' na {url}; zmiana struktury strony?")
+    valid = m.group(1)
 
     sat, sun, wd_school, wd_free, wd_plain = [], [], None, None, None
     for sec in re.split(r"\n(?=(?:Od poniedziałku|Soboty|Niedziele))", text)[1:]:
@@ -115,6 +158,10 @@ def parse_stop(url):
             extra_legend.append("N – kursuje tylko w dni nauki szkolnej")
         if any(t not in school_t for t in free_t):
             extra_legend.append("F – kursuje tylko w dni wolne od nauki szkolnej")
+
+    for label, times in (("dni robocze", wd), ("soboty", sat), ("niedziele", sun)):
+        if not times:
+            raise RuntimeError(f"pusta sekcja '{label}' ({direction}) na {url}")
 
     legend, notes = [], []
     m = re.search(r"Objaśnienia:(.*?)Rozkład jazdy ważny", text, re.S)
@@ -159,9 +206,6 @@ def build_line(line, cfg):
         "legend": " · ".join(legend),
         "dirs": [{k: d[k] for k in ("name", "wd", "sat", "sun")} for d in dirs],
     }
-    for d in entry["dirs"]:
-        if not (d["wd"] and d["sat"] and d["sun"]):
-            raise RuntimeError(f"linia {line}: pusta sekcja dnia w {d['name']}")
     return entry
 
 

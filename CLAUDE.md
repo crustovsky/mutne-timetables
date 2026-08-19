@@ -23,13 +23,16 @@ https://komunikacjapowiatuzywieckiego.pl, static trasownik.net HTML, no GTFS/API
 - `linia-XXX.html`: stable per-line entry points. Stop-page URLs embed the
   valid-from date (e.g. `rozklad-233_20260209-15-2.html`) so they rot on every
   update; always enter via the line pages and follow links with anchor text "Mutne".
+- While an old and a pre-published new schedule coexist, the line page shows a
+  version chooser (`start-XXX_YYYYMMDD-*.html` links) instead of the stop list;
+  the scraper follows the version in effect today (first seen on 231, Aug 2026).
 
 ## Lines at Mutne (as of 2026-06)
 
 | Line | Route | Operator | Valid from |
 |------|-------|----------|------------|
 | 231 | Żywiec – Mutne – Pewel Wielka | Cedrom J. Kamiński | 09.02.2026 |
-| 232 | Żywiec – Mutne – Koszarawa (Jałowiec) | Team Bus J. Wróbel | 16.03.2026 |
+| 232 | Żywiec – Mutne – Koszarawa (Jałowiec) | Team Bus J. Wróbel | 06.07.2026 |
 | 233 | Żywiec – Mutne – Korbielów – Krzyżówki | Cedrom J. Kamiński | 09.02.2026 |
 | 234 | Żywiec – Mutne – Sopotnia Wielka | Chrustek Travel | 23.03.2026 |
 
