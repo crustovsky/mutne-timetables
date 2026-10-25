@@ -27,11 +27,11 @@ https://komunikacjapowiatuzywieckiego.pl, static trasownik.net HTML, no GTFS/API
   version chooser (`start-XXX_YYYYMMDD-*.html` links) instead of the stop list;
   the scraper follows the version in effect today (first seen on 231, Aug 2026).
 
-## Lines at Mutne (as of 2026-06)
+## Lines at Mutne (as of 2026-10)
 
 | Line | Route | Operator | Valid from |
 |------|-------|----------|------------|
-| 231 | Żywiec – Mutne – Pewel Wielka | Cedrom J. Kamiński | 09.02.2026 |
+| 231 | Żywiec – Mutne – Pewel Wielka | Cedrom J. Kamiński | 01.09.2026 |
 | 232 | Żywiec – Mutne – Koszarawa (Jałowiec) | Team Bus J. Wróbel | 06.07.2026 |
 | 233 | Żywiec – Mutne – Korbielów – Krzyżówki | Cedrom J. Kamiński | 09.02.2026 |
 | 234 | Żywiec – Mutne – Sopotnia Wielka | Chrustek Travel | 23.03.2026 |
@@ -56,7 +56,9 @@ operator as Cedrom, same phone) and was deliberately dropped.
 - 232: Nov–Mar bad weather may limit service through Koszarawa Bystra (the
   "Uwaga" note, scraped into the legend).
 - No service network-wide: 1 Jan, Easter Sunday/Monday, 25–26 Dec; holidays
-  follow the Sunday schedule.
+  follow the Sunday schedule. `index.html` computes Polish public holidays
+  (fixed dates + Easter-based) in `todayKey`, so a weekday holiday shows the
+  Sunday column and no-service days show no next departure.
 - Scraper fails loudly (empty day section, missing Mutne links, unknown line)
   rather than writing garbage, a red workflow means the page keeps serving the
   last good data.

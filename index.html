@@ -234,7 +234,7 @@ const DATA = [
     "legend": "L – kurs do: Żywiec, Leśnianka II · S – kurs przez: Żywiec, Pola Lisickich Szpital, z pominięciem: Żywiec, Grunwaldzka ZSTiL · N – kursuje tylko w dni nauki szkolnej · F – kursuje tylko w dni wolne od nauki szkolnej · B – kurs do: Koszarawa, Bystra pętla · K – kurs przez: Koszarawa, Bystra · Uwaga! W okresie od listopada do marca, w przypadku złych warunków atmosferycznych, możliwe ograniczenie w kursowaniu przez Koszarawę Bystrą.",
     "dirs": [
       {
-        "name": "→ Żywiec, Leśnianka II",
+        "name": "→ Żywiec (Leśnianka II, przez dworzec autobusowy)",
         "wd": [
           "05:06 L",
           "06:23 N",
@@ -476,11 +476,27 @@ const DATA = [
 const UPDATED = "01.09.2026, 09:26";
 // AUTO-DATA:END
 
-const DAY_LABELS = { wd: "Pon–Pt", sat: "Soboty", sun: "Niedziele i święta" };
+const DAY_LABELS = { wd: "Pon–Pt", sat: "Soboty", sun: "Niedziele i święta", none: "Brak kursów (święto)" };
 
-function todayKey() {
-  const d = new Date().getDay();
-  return d === 0 ? "sun" : d === 6 ? "sat" : "wd";
+// Polish public holidays run on the Sunday timetable; a few days have no service at all.
+const HOLIDAYS = ["1-1", "1-6", "5-1", "5-3", "8-15", "11-1", "11-11", "12-24", "12-25", "12-26"];
+const NO_SERVICE = ["1-1", "12-25", "12-26"];
+
+function easterSunday(y) {
+  const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4,
+    g = Math.floor((b - Math.floor((b + 8) / 25) + 1) / 3), h = (19 * a + b - d - g + 15) % 30,
+    i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7,
+    m = Math.floor((a + 11 * h + 22 * l) / 451), n = h + l - 7 * m + 114;
+  return new Date(y, Math.floor(n / 31) - 1, n % 31 + 1);
+}
+
+function todayKey(now) {
+  const md = `${now.getMonth() + 1}-${now.getDate()}`;
+  const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const fromEaster = Math.round((midnight - easterSunday(now.getFullYear())) / 864e5);
+  if (NO_SERVICE.includes(md) || fromEaster === 0 || fromEaster === 1) return "none";
+  if (HOLIDAYS.includes(md) || fromEaster === 60 || now.getDay() === 0) return "sun";  // 60 = Boże Ciało
+  return now.getDay() === 6 ? "sat" : "wd";
 }
 
 function minutes(t) {
@@ -519,7 +535,7 @@ function render() {
 function tick() {
   const now = new Date();
   const nowMin = now.getHours() * 60 + now.getMinutes();
-  const day = todayKey();
+  const day = todayKey(now);
 
   document.getElementById("clock").textContent =
     now.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
@@ -541,7 +557,7 @@ function tick() {
       const wait = Number(next.dataset.min) - nowMin;
       label.textContent = wait === 0 ? "teraz" : `za ${Math.floor(wait/60) ? Math.floor(wait/60) + " h " : ""}${wait % 60} min`;
     } else {
-      label.textContent = "dziś już nic";
+      label.textContent = day === "none" ? "dziś brak kursów" : "dziś już nic";
     }
   });
 }
