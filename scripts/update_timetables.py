@@ -31,6 +31,7 @@ LINES = {
 # nicer direction labels; anything unknown falls back to "→ <kierunek>"
 LABELS = {
     "Żywiec, Dworzec Autobusowy": "→ Żywiec (dworzec autobusowy, 27 min)",
+    "Żywiec, Leśnianka II": "→ Żywiec (Leśnianka II, przez dworzec autobusowy)",
     "Pewel Wielka, Łobozówka": "→ Pewel Wielka (Łobozówka, 16 min)",
     "Koszarawa, Jałowiec Pętla": "→ Koszarawa (Jałowiec pętla, 26 min)",
     "Krzyżówki, Posesja 303": "→ Krzyżówki (przez Jeleśnię i Korbielów, 27 min)",
@@ -39,7 +40,7 @@ LABELS = {
 
 
 def fetch(url):
-    req = urllib.request.Request(url, headers={"User-Agent": "bus.mutne.pl updater"})
+    req = urllib.request.Request(url, headers={"User-Agent": "rozklad.mutne.pl updater"})
     try:
         with urllib.request.urlopen(req, timeout=30) as r:
             return r.read().decode("utf-8", "replace")

@@ -2,7 +2,7 @@ name: Aktualizacja rozkładów
 
 on:
   schedule:
-    - cron: "0 2 * * *"   # codziennie 02:00 UTC — przed pierwszymi kursami, żeby rozkład ważny od danego dnia pojawił się rano tego dnia
+    - cron: "37 0 * * *"   # codziennie 00:37 UTC, przed pierwszymi kursami (05:06). GitHub opóźnia cron o godziny, najbardziej o pełnych godzinach, stąd zapas i nietypowa minuta
   workflow_dispatch:
 
 permissions:
